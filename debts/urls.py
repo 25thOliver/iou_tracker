@@ -1,6 +1,7 @@
 # debts/urls.py - Simplified version
 from django.urls import path
 from . import views, auth_views
+from rest_framework_simplejwt.views import TokenRefreshView
 
 app_name = 'debts'
 
@@ -10,6 +11,9 @@ urlpatterns = [
     path('auth/login/', auth_views.UserLoginView.as_view(), name='login'),
     path('auth/logout/', auth_views.logout_view, name='logout'),
     path('auth/dashboard/', auth_views.user_dashboard, name='user_dashboard'),
+    path('auth/profile/', auth_views.user_profile, name='user_profile'),
+    path('auth/password/change/', auth_views.change_password_view, name='change_password'),
+    path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/health/', auth_views.auth_health_check, name='auth_health'),
 
     # Debt management endpoints
@@ -17,20 +21,20 @@ urlpatterns = [
     path('debts/<uuid:id>/', views.DebtDetailView.as_view(), name='debt-detail'),
     path('debts/<uuid:debt_id>/reminder/', views.send_reminder, name='send-reminder'),
     path('debts/<uuid:debt_id>/mark-paid/', views.mark_debt_paid, name='mark-debt-paid'),
-    
+
     # Payment plan endpoints
     path('payment-plans/', views.PaymentPlanListView.as_view(), name='payment-plan-list'),
     path('payment-plans/create/', views.PaymentPlanCreateView.as_view(), name='payment-plan-create'),
     path('payment-plans/<uuid:id>/', views.PaymentPlanDetailView.as_view(), name='payment-plan-detail'),
-    
+
     # Payment record endpoints
     path('payments/', views.PaymentRecordListView.as_view(), name='payment-list'),
     path('payments/create/', views.PaymentRecordCreateView.as_view(), name='payment-create'),
-    
+
     # Reminder template endpoints
     path('reminder-templates/', views.ReminderTemplateListCreateView.as_view(), name='reminder-template-list-create'),
     path('reminder-templates/<uuid:id>/', views.ReminderTemplateDetailView.as_view(), name='reminder-template-detail'),
-    
+
     # Statistics and reporting endpoints
     path('stats/', views.debt_statistics, name='debt-stats'),
     path('overdue/', views.overdue_debts, name='overdue-debts'),

@@ -18,7 +18,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework.authtoken',  
+    'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
@@ -101,14 +101,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # REST Framework configuration
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # JWT tokens
-        'rest_framework.authentication.TokenAuthentication',  # Simple tokens (fallback)
-        'rest_framework.authentication.SessionAuthentication', 
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
-
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # CHANGE FROM AllowAny
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -122,7 +120,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-# JWT Configuration 
+# JWT Configuration
 from datetime import timedelta
 
 SIMPLE_JWT = {

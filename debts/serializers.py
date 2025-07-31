@@ -7,7 +7,7 @@ class PaymentRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentRecord
         fields = [
-            'id', 'amount', 'payment_method', 'reference_number', 
+            'id', 'amount', 'payment_method', 'reference_number',
             'notes', 'date_paid', 'verified'
         ]
         read_only_fields = ['id', 'date_paid']
@@ -16,7 +16,7 @@ class PaymentPlanSerializer(serializers.ModelSerializer):
     payments = PaymentRecordSerializer(many=True, read_only=True)
     completion_percentage = serializers.ReadOnlyField()
     remaining_amount = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = PaymentPlan
         fields = [
@@ -28,7 +28,7 @@ class PaymentPlanSerializer(serializers.ModelSerializer):
 
 class ReminderLogSerializer(serializers.ModelSerializer):
     template_name = serializers.CharField(source='template_used.name', read_only=True)
-    
+
     class Meta:
         model = ReminderLog
         fields = [
@@ -42,13 +42,13 @@ class DebtListSerializer(serializers.ModelSerializer):
     is_overdue = serializers.ReadOnlyField()
     days_overdue = serializers.ReadOnlyField()
     amount_paid = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = Debt
         fields = [
             'id', 'debtor_name', 'debtor_email', 'amount', 'original_amount',
             'description', 'status', 'due_date', 'reminder_count',
-            'payment_plan_offered', 'is_overdue', 'days_overdue', 
+            'payment_plan_offered', 'is_overdue', 'days_overdue',
             'amount_paid', 'created_at'
         ]
 
@@ -60,7 +60,7 @@ class DebtDetailSerializer(serializers.ModelSerializer):
     is_overdue = serializers.ReadOnlyField()
     days_overdue = serializers.ReadOnlyField()
     amount_paid = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = Debt
         fields = [
@@ -76,19 +76,19 @@ class DebtDetailSerializer(serializers.ModelSerializer):
 
 class DebtCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating debts"""
-    
+
     class Meta:
         model = Debt
         fields = [
             'debtor_name', 'debtor_email', 'debtor_phone', 'amount',
             'description', 'due_date', 'notes'
         ]
-    
+
     def create(self, validated_data):
         # Set original_amount to amount when creating
         validated_data['original_amount'] = validated_data['amount']
         return super().create(validated_data)
-    
+
     def validate_amount(self, value):
         if value <= 0:
             raise serializers.ValidationError("Amount must be greater than 0")
@@ -96,13 +96,13 @@ class DebtCreateUpdateSerializer(serializers.ModelSerializer):
 
 class PaymentPlanCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating payment plans"""
-    
+
     class Meta:
         model = PaymentPlan
         fields = [
             'installment_amount', 'frequency', 'total_installments', 'start_date'
         ]
-    
+
     def validate(self, data):
         debt = self.context.get('debt')
         if debt:
@@ -115,21 +115,35 @@ class PaymentPlanCreateSerializer(serializers.ModelSerializer):
 
 class PaymentRecordCreateSerializer(serializers.ModelSerializer):
     """Serializer for recording payments"""
-    
+    debt = serializers.PrimaryKeyRelatedField(queryset=Debt.objects.all())
+
     class Meta:
         model = PaymentRecord
         fields = [
-            'amount', 'payment_method', 'reference_number', 'notes'
+            'debt', 'amount', 'payment_method', 'reference_number', 'notes'
         ]
-    
+
     def validate_amount(self, value):
         if value <= 0:
             raise serializers.ValidationError("Payment amount must be greater than 0")
-        
-        debt = self.context.get('debt')
-        if debt and value > debt.amount:
-            raise serializers.ValidationError("Payment amount cannot exceed remaining debt")
-        
+
+        # The debt is now directly available via self.initial_data.get('debt')
+        # or self.validated_data['debt'] after is_valid()
+        # So we can remove the context dependency here if it's no longer needed for validation
+        # If debt is needed for validation logic here, it should be accessed as self.initial_data.get('debt')
+        # or ensure it's passed in context if not directly in fields.
+        # Given it's now in fields, it will be in validated_data.
+        # We need to retrieve the Debt object here for comparison.
+        debt_id = self.initial_data.get('debt')
+        if debt_id:
+            try:
+                debt = Debt.objects.get(id=debt_id)
+                if value > debt.amount:
+                    raise serializers.ValidationError("Payment amount cannot exceed remaining debt")
+            except Debt.DoesNotExist:
+                # This case should ideally be caught by the PrimaryKeyRelatedField validation already
+                pass
+
         return value
 
 class ReminderTemplateSerializer(serializers.ModelSerializer):
@@ -147,7 +161,7 @@ class SendReminderSerializer(serializers.Serializer):
     template_id = serializers.UUIDField(required=False)
     custom_subject = serializers.CharField(max_length=200, required=False)
     custom_message = serializers.CharField(required=False)
-    
+
     def validate(self, data):
         if not data.get('template_id') and not (data.get('custom_subject') and data.get('custom_message')):
             raise serializers.ValidationError(

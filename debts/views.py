@@ -7,6 +7,7 @@ from rest_framework import filters
 from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
 from decimal import Decimal
+from django.utils import timezone
 import uuid
 
 from .models import Debt, PaymentPlan, PaymentRecord, ReminderTemplate, ReminderLog
@@ -92,7 +93,7 @@ class PaymentPlanCreateView(generics.CreateAPIView):
         debt = serializer.validated_data['debt']
         if debt.creditor != self.request.user:
             raise permissions.PermissionDenied("You can only create payment plans for your own debts.")
-        
+
         # Calculate next_due_date logic
         from datetime import timedelta
         frequency = serializer.validated_data['frequency']
@@ -102,7 +103,7 @@ class PaymentPlanCreateView(generics.CreateAPIView):
             'monthly': 30,
             'quarterly': 90
         }
-        
+
         next_due = timezone.now().date() + timedelta(days=frequency_days.get(frequency, 30))
         serializer.save(next_due_date=next_due)
 
@@ -127,12 +128,12 @@ class PaymentRecordCreateView(generics.CreateAPIView):
         debt = serializer.validated_data['debt']
         if debt.creditor != self.request.user:
             raise permissions.PermissionDenied("You can only record payments for your own debts.")
-        
+
         payment_amount = serializer.validated_data['amount']
-        
+
         # Save the payment record
         payment = serializer.save()
-        
+
         # Update debt amount
         debt.amount -= payment_amount
         if debt.amount <= 0:
@@ -140,7 +141,7 @@ class PaymentRecordCreateView(generics.CreateAPIView):
             debt.status = 'paid'
             debt.date_paid = timezone.now()
         debt.save()
-        
+
         # Update payment plan if exists
         if hasattr(debt, 'payment_plan'):
             payment_plan = debt.payment_plan
@@ -173,52 +174,60 @@ def send_reminder(request, debt_id):
         debt = Debt.objects.get(id=debt_id, creditor=request.user)
     except Debt.DoesNotExist:
         return Response({'error': 'Debt not found or access denied'}, status=status.HTTP_404_NOT_FOUND)
-    
+
     serializer = SendReminderSerializer(data=request.data)
     if serializer.is_valid():
-        reminder_type = serializer.validated_data['reminder_type']
+        custom_subject = serializer.validated_data.get('custom_subject', '')
         custom_message = serializer.validated_data.get('custom_message', '')
         template_id = serializer.validated_data.get('template_id')
-        
-        # Get or create reminder message
+
+        subject = ""
+        message = ""
+        template = None # Initialize template to None
+
+        # Determine subject and message
         if template_id:
             try:
                 template = ReminderTemplate.objects.get(id=template_id)
-                message = template.content
+                subject = template.subject_template
+                message = template.body_template
             except ReminderTemplate.DoesNotExist:
                 return Response({'error': 'Template not found'}, status=status.HTTP_404_NOT_FOUND)
         else:
+            # Provide default subject and message if custom ones are not provided
+            subject = custom_subject or f"Reminder: Debt for {debt.description}"
             message = custom_message or f"Friendly reminder: You owe {debt.amount} for {debt.description}"
-        
-        # Replace template variables
+
+        # Replace template variables in subject
+        subject = subject.replace('{debtor_name}', debt.debtor_name)
+        subject = subject.replace('{amount}', str(debt.amount))
+        subject = subject.replace('{description}', debt.description)
+        subject = subject.replace('{due_date}', str(debt.due_date) if debt.due_date else 'N/A')
+
+        # Replace template variables in message
         message = message.replace('{debtor_name}', debt.debtor_name)
         message = message.replace('{amount}', str(debt.amount))
         message = message.replace('{description}', debt.description)
         message = message.replace('{due_date}', str(debt.due_date) if debt.due_date else 'N/A')
-        
+
         # Create reminder log
         reminder_log = ReminderLog.objects.create(
             debt=debt,
-            reminder_type=reminder_type,
-            message=message,
-            status='sent'  # In production, this would be updated based on actual sending
+            recipient_email=debt.debtor_email,
+            subject=subject,
+            message_body=message,
+            status='sent', # Set initial status, adjust if email sending is asynchronous
+            template_used=template
         )
-        
-        # Update debt reminder tracking
-        debt.last_reminder_sent = timezone.now()
+
         debt.reminder_count += 1
+        debt.last_reminder_sent = timezone.now()
         debt.save()
-        
-        # Here you would integrate with email/SMS service
-        # For now, we'll just log it
-        
-        return Response({
-            'message': 'Reminder sent successfully!',
-            'reminder_id': reminder_log.id,
-            'sent_to': debt.debtor_email if reminder_type == 'email' else debt.debtor_phone
-        }, status=status.HTTP_200_OK)
-    
+
+        return Response({'message': 'Reminder sent successfully', 'reminder_id': reminder_log.id}, status=status.HTTP_200_OK)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['GET'])
@@ -226,7 +235,7 @@ def send_reminder(request, debt_id):
 def debt_statistics(request):
     """Get debt statistics for the authenticated user"""
     user_debts = Debt.objects.filter(creditor=request.user)
-    
+
     # Basic counts
     total_debts = user_debts.count()
     active_debts = user_debts.filter(status='active').count()
@@ -235,30 +244,30 @@ def debt_statistics(request):
         due_date__lt=timezone.now().date(),
         status='active'
     ).count()
-    
+
     # Financial stats
     total_amount_owed = user_debts.filter(status='active').aggregate(
         total=Sum('amount')
     )['total'] or Decimal('0.00')
-    
+
     # Calculate amount paid (original - current)
     original_total = user_debts.aggregate(
         total=Sum('original_amount')
     )['total'] or Decimal('0.00')
-    
+
     current_total = user_debts.aggregate(
         total=Sum('amount')
     )['total'] or Decimal('0.00')
-    
+
     total_amount_paid = original_total - current_total
-    
+
     average_debt = user_debts.filter(status='active').aggregate(
         avg=Avg('amount')
     )['avg'] or Decimal('0.00')
-    
+
     # Reminder stats
     total_reminders = ReminderLog.objects.filter(debt__creditor=request.user).count()
-    
+
     stats_data = {
         'total_debts': total_debts,
         'total_amount_owed': total_amount_owed,
@@ -269,7 +278,7 @@ def debt_statistics(request):
         'average_debt_amount': average_debt,
         'total_reminders_sent': total_reminders,
     }
-    
+
     serializer = DebtStatsSerializer(stats_data)
     return Response(serializer.data)
 
@@ -283,7 +292,7 @@ def overdue_debts(request):
         due_date__lt=timezone.now().date(),
         status='active'
     )
-    
+
     serializer = DebtListSerializer(overdue, many=True)
     return Response(serializer.data)
 
@@ -296,12 +305,12 @@ def mark_debt_paid(request, debt_id):
         debt = Debt.objects.get(id=debt_id, creditor=request.user)
     except Debt.DoesNotExist:
         return Response({'error': 'Debt not found or access denied'}, status=status.HTTP_404_NOT_FOUND)
-    
+
     debt.status = 'paid'
     debt.amount = Decimal('0.00')
     debt.date_paid = timezone.now()
     debt.save()
-    
+
     return Response({
         'message': 'Debt marked as paid successfully!',
         'debt_id': debt.id
