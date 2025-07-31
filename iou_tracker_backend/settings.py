@@ -166,7 +166,8 @@ NOTIFICATION_SETTINGS = {
     'SMS_ENABLED': config('SMS_NOTIFICATIONS_ENABLED', default=True, cast=bool),
     'DEBT_REMINDER_TEMPLATE': 'emails/debt_reminder.html',
     'PAYMENT_CONFIRMATION_TEMPLATE': 'emails/payment_confirmation.html',
-    \'DEBT_CREATED_TEMPLATE\': \'emails/debt_created.html\',\n}
+    'DEBT_CREATED_TEMPLATE': 'emails/debt_created.html',
+}
 
 # DRF Spectacular Settings
 SPECTACULAR_SETTINGS = {
@@ -175,7 +176,6 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     # Other settings can be added here
-}
 }
 
 # Celery configuration
