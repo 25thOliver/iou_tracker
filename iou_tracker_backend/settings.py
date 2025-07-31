@@ -25,6 +25,8 @@ INSTALLED_APPS = [
 
 
     'debts',
+    'notifications',
+
 ]
 
 MIDDLEWARE = [
@@ -145,11 +147,26 @@ CORS_ALLOWED_ORIGINS = [
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.sendgrid.net')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+EMAIL_HOST_USER = 'apikey'  # Required for SendGrid SMTP
+EMAIL_HOST_PASSWORD = config('SENDGRID_API_KEY', default='') # Your SendGrid API Key
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@ioutracker.com')
+
+# Twilio SMS Configuration
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
+TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER', default='')
+
+# Notification Settings
+NOTIFICATION_SETTINGS = {
+    'EMAIL_ENABLED': config('EMAIL_NOTIFICATIONS_ENABLED', default=True, cast=bool),
+    'SMS_ENABLED': config('SMS_NOTIFICATIONS_ENABLED', default=True, cast=bool),
+    'DEBT_REMINDER_TEMPLATE': 'emails/debt_reminder.html',
+    'PAYMENT_CONFIRMATION_TEMPLATE': 'emails/payment_confirmation.html',
+    'DEBT_CREATED_TEMPLATE': 'emails/debt_created.html',
+}
 
 # Celery configuration
 CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
@@ -158,3 +175,28 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+
+
+# Logging configuration for debugging notifications
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'notifications.log',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'notifications': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}

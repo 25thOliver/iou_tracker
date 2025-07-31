@@ -1,0 +1,233 @@
+<!-- iou-tracker/templates/emails/base_email.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}IOU Tracker{% endblock %}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .highlight {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            margin: 20px 0;
+        }
+        .amount {
+            font-size: 20px;
+            font-weight: bold;
+            color: #dc3545;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .info-table th, .info-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .info-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="logo">💰 IOU Tracker</div>
+            <p>Your Personal Debt Management System</p>
+        </div>
+        
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+        
+        <div class="footer">
+            <p>This email was sent from IOU Tracker. If you no longer wish to receive these notifications, please update your preferences in the app.</p>
+            <p>&copy; 2025 IOU Tracker. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+
+<!-- iou-tracker/templates/emails/debt_reminder.html -->
+{% extends "emails/base_email.html" %}
+
+{% block title %}Debt Reminder - IOU Tracker{% endblock %}
+
+{% block content %}
+<h2>💸 Friendly Debt Reminder</h2>
+
+<p>Hi {user_name},</p>
+
+<p>This is a friendly reminder about your outstanding debt with <strong>{creditor_name}</strong>.</p>
+
+<div class="highlight">
+    <table class="info-table">
+        <tr>
+            <th>Amount Owed:</th>
+            <td class="amount">${amount}</td>
+        </tr>
+        <tr>
+            <th>Description:</th>
+            <td>{description}</td>
+        </tr>
+        <tr>
+            <th>Due Date:</th>
+            <td>{due_date}</td>
+        </tr>
+    </table>
+</div>
+
+<p>Please consider settling this debt as soon as possible to maintain good relationships and avoid any late fees.</p>
+
+<p>If you've already made this payment, please disregard this reminder or contact {creditor_name} to update the record.</p>
+
+<a href="#" class="button">View Debt Details</a>
+
+<p>Thank you for using IOU Tracker!</p>
+
+<p>Best regards,<br>
+The IOU Tracker Team</p>
+{% endblock %}
+
+<!-- iou-tracker/templates/emails/payment_confirmation.html -->
+{% extends "emails/base_email.html" %}
+
+{% block title %}Payment Received - IOU Tracker{% endblock %}
+
+{% block content %}
+<h2>💰 Payment Received Confirmation</h2>
+
+<p>Hi {user_name},</p>
+
+<p>Great news! We've recorded a payment from <strong>{debtor_name}</strong> for one of your debts.</p>
+
+<div class="highlight">
+    <table class="info-table">
+        <tr>
+            <th>Payment Amount:</th>
+            <td class="amount">${amount}</td>
+        </tr>
+        <tr>
+            <th>Payment Date:</th>
+            <td>{payment_date}</td>
+        </tr>
+        <tr>
+            <th>Debt Description:</th>
+            <td>{debt_description}</td>
+        </tr>
+        <tr>
+            <th>Remaining Balance:</th>
+            <td class="amount">${remaining_amount}</td>
+        </tr>
+    </table>
+</div>
+
+{% if remaining_amount == "0.00" %}
+<p>🎉 <strong>Congratulations!</strong> This debt has been fully paid off!</p>
+{% else %}
+<p>The remaining balance for this debt is <strong>${remaining_amount}</strong>.</p>
+{% endif %}
+
+<a href="#" class="button">View Payment Details</a>
+
+<p>Thank you for using IOU Tracker to manage your finances!</p>
+
+<p>Best regards,<br>
+The IOU Tracker Team</p>
+{% endblock %}
+
+<!-- iou-tracker/templates/emails/debt_created.html -->
+{% extends "emails/base_email.html" %}
+
+{% block title %}New Debt Created - IOU Tracker{% endblock %}
+
+{% block content %}
+<h2>📋 New Debt Notification</h2>
+
+<p>Hi {user_name},</p>
+
+<p><strong>{creditor_name}</strong> has created a new debt record for you in IOU Tracker.</p>
+
+<div class="highlight">
+    <table class="info-table">
+        <tr>
+            <th>Amount:</th>
+            <td class="amount">${amount}</td>
+        </tr>
+        <tr>
+            <th>Description:</th>
+            <td>{description}</td>
+        </tr>
+        <tr>
+            <th>Due Date:</th>
+            <td>{due_date}</td>
+        </tr>
+        <tr>
+            <th>Created Date:</th>
+            <td>{created_date}</td>
+        </tr>
+    </table>
+</div>
+
+<p>Please review this debt record and reach out to {creditor_name} if you have any questions or concerns.</p>
+
+<p>You can view all your debts and make payments through the IOU Tracker app.</p>
+
+<a href="#" class="button">View All Debts</a>
+
+<p>Thank you for using IOU Tracker!</p>
+
+<p>Best regards,<br>
+The IOU Tracker Team</p>
+{% endblock %}
