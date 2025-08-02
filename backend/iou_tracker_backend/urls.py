@@ -22,6 +22,10 @@ def api_root(request):
             'debt_statistics': '/api/debts/stats/',
             'overdue_debts': '/api/debts/overdue/',
             'admin': '/admin/',
+            'ious': '/api/ious/',
+            'iou_detail': '/api/ious/{id}/',
+            'notifications': '/api/notifications/',
+            'notification_detail': '/api/notifications/{id}/',
         },
         'documentation': {
             'filtering': 'Use ?status=active, ?overdue=true, ?has_payment_plan=true',
@@ -35,6 +39,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', api_root, name='api-root'),
     path('api/debts/', include('debts.urls')),
+    path('api/ious/', include('iou_app.urls')),
     # DRF Spectacular API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

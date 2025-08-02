@@ -4,7 +4,7 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db.models import Q
 from .models import NotificationPreference, NotificationLog, NotificationTemplate
 from .serializers import (
@@ -14,6 +14,8 @@ from .serializers import (
 from .tasks import send_notification_task, send_debt_reminder_task
 from debts.models import Debt, PaymentRecord
 import logging
+
+User = get_user_model()
 
 logger = logging.getLogger('notifications')
 
@@ -37,6 +39,39 @@ class NotificationLogListView(generics.ListAPIView):
         return NotificationLog.objects.filter(
             user=self.request.user
         ).order_by('-created_at')
+
+class NotificationListCreateView(generics.ListCreateAPIView):
+    queryset = NotificationLog.objects.all()
+    serializer_class = NotificationLogSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Only show notifications for the authenticated user
+        return NotificationLog.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        # Assign the current user as the recipient of the notification
+        serializer.save(user=self.request.user)
+
+class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = NotificationLog.objects.all()
+    serializer_class = NotificationLogSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id' # Use 'id' as the lookup field
+
+    def get_queryset(self):
+        # Ensure users can only access their own notifications
+        return NotificationLog.objects.filter(user=self.request.user)
+
+    def perform_update(self, serializer):
+        # Special handling for marking as read
+        if 'read' in self.request.data and self.request.data['read'] is True:
+            instance = serializer.save(status='read') # Assuming 'read' is a valid status
+            # You might want to update a 'read_at' timestamp here too
+            # instance.read_at = timezone.now()
+            # instance.save()
+        else:
+            serializer.save()
 
 class NotificationTemplateListView(generics.ListAPIView):
     """List available notification templates (admin only)"""

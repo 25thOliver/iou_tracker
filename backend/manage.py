@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/oliver/Documents/iou-tracker/.venv/bin/python
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
