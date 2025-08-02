@@ -1,0 +1,63 @@
+# Byte-compiled / optimized / dll files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Distribution / packaging
+.eggs/
+*.egg-info/
+dist/
+build/
+wheels/
+*.whl
+
+# Virtual environments
+env/
+venv/
+.venv/
+.env/
+
+# Dependencies
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+
+# MyPy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# Logs
+*.log
+# For notifications.log, since it's inside backend/, it will be ignored by *.log.
+
+# Database
+*.sqlite3
+/db.sqlite3
+
+# Docker
+# Docker-specific build artifacts (if any, typically intermediate images are not saved)
+# Dockerfile and docker-compose.yml are generally committed.
+# Exclude temporary build files if they were created outside the backend folder.
+
+# IDE specific files
+.qodo/
+.ropeproject/
+.idea/
+.vscode/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Swap files
+*.swp
+*.swo
