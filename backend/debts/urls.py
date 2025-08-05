@@ -1,35 +1,27 @@
-# debts/urls.py - Simplified version
+# debts/urls.py
 from django.urls import path
-from . import views, auth_views
+from . import views
 from rest_framework_simplejwt.views import TokenRefreshView
 
 app_name = 'debts'
 
 urlpatterns = [
-    # Authentication endpoints
-    path('auth/register/', auth_views.UserRegistrationView.as_view(), name='register'),
-    path('auth/login/', auth_views.UserLoginView.as_view(), name='login'),
-    path('auth/logout/', auth_views.logout_view, name='logout'),
-    path('auth/dashboard/', auth_views.user_dashboard, name='user_dashboard'),
-    path('auth/profile/', auth_views.user_profile, name='user_profile'),
-    path('auth/password/change/', auth_views.change_password_view, name='change_password'),
-    path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('auth/health/', auth_views.auth_health_check, name='auth_health'),
-
     # Debt management endpoints
-    path('debts/', views.DebtListCreateView.as_view(), name='debt-list-create'),
-    path('debts/<uuid:id>/', views.DebtDetailView.as_view(), name='debt-detail'),
-    path('debts/<uuid:debt_id>/reminder/', views.send_reminder, name='send-reminder'),
-    path('debts/<uuid:debt_id>/mark-paid/', views.mark_debt_paid, name='mark-debt-paid'),
+    path('', views.DebtListCreateView.as_view(), name='debt-list-create'),
+    path('<uuid:id>/', views.DebtDetailView.as_view(), name='debt-detail'),
+    path('<uuid:debt_id>/send-reminder/', views.send_reminder, name='send-reminder'),
+    path('<uuid:debt_id>/mark-paid/', views.mark_debt_paid, name='mark-debt-paid'),
 
-    # Payment plan endpoints
+    # Payment plan endpoints (related to a specific debt)
+    path('<uuid:debt_id>/payment-plan/', views.PaymentPlanCreateView.as_view(), name='create-payment-plan'),
+    # Generic payment plan list/detail views (if needed, not tied to a specific debt)
     path('payment-plans/', views.PaymentPlanListView.as_view(), name='payment-plan-list'),
-    path('payment-plans/create/', views.PaymentPlanCreateView.as_view(), name='payment-plan-create'),
     path('payment-plans/<uuid:id>/', views.PaymentPlanDetailView.as_view(), name='payment-plan-detail'),
 
-    # Payment record endpoints
+    # Payment record endpoints (related to a specific debt)
+    path('<uuid:debt_id>/payments/create/', views.PaymentRecordCreateView.as_view(), name='create-payment'),
+    # Generic payment record list view
     path('payments/', views.PaymentRecordListView.as_view(), name='payment-list'),
-    path('payments/create/', views.PaymentRecordCreateView.as_view(), name='payment-create'),
 
     # Reminder template endpoints
     path('reminder-templates/', views.ReminderTemplateListCreateView.as_view(), name='reminder-template-list-create'),
