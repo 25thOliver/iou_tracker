@@ -50,10 +50,9 @@ class UserLoginSerializer(serializers.Serializer):
         if user is None:
             user = User.objects.filter(username=username_or_email).first()
 
-        if user:
-            if user.check_password(password):
-                attrs['user'] = user
-                return attrs
+        if user and user.check_password(password):
+            attrs['user'] = user
+            return attrs
 
         raise serializers.ValidationError(_("Unable to log in with provided credentials."))
 

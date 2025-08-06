@@ -22,23 +22,23 @@
             </div>
           </div>
 
-          <!-- Username field -->
+          <!-- Username or Email field -->
           <div>
-            <label for="username" class="block text-sm font-medium text-gray-700">
-              Username
+            <label for="username_or_email" class="block text-sm font-medium text-gray-700">
+              Username or Email
             </label>
             <div class="mt-1">
               <input
-                id="username"
-                v-model="form.username"
+                id="username_or_email"
+                v-model="form.username_or_email"
                 type="text"
                 autocomplete="username"
                 required
                 class="input-field"
-                :class="{ 'border-red-300': errors.username }"
+                :class="{ 'border-red-300': errors.username_or_email }"
               />
-              <p v-if="errors.username" class="mt-1 text-sm text-red-600">
-                {{ errors.username }}
+              <p v-if="errors.username_or_email" class="mt-1 text-sm text-red-600">
+                {{ errors.username_or_email }}
               </p>
             </div>
           </div>
@@ -119,7 +119,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const form = reactive<LoginCredentials>({
-  username: '',
+  username_or_email: '',
   password: ''
 })
 
@@ -127,30 +127,30 @@ const errors = ref<Record<string, string>>({})
 
 const validateForm = (): boolean => {
   errors.value = {}
-  
-  if (!form.username.trim()) {
-    errors.value.username = 'Username is required'
+
+  if (!form.username_or_email.trim()) {
+    errors.value.username_or_email = 'Username or Email is required'
   }
-  
+
   if (!form.password) {
     errors.value.password = 'Password is required'
   }
-  
+
   return Object.keys(errors.value).length === 0
 }
 
 const handleLogin = async () => {
   if (!validateForm()) return
-  
+
   try {
     await authStore.login(form)
-    
+
     // Redirect to intended page or dashboard
     const redirectTo = route.query.redirect as string || '/dashboard'
     router.push(redirectTo)
   } catch (error: any) {
     console.error('Login failed:', error)
-    
+
     // Handle field-specific errors
     if (error.response?.data?.errors) {
       errors.value = error.response.data.errors
