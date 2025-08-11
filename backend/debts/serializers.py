@@ -74,19 +74,59 @@ class DebtDetailSerializer(serializers.ModelSerializer):
             'id', 'reminder_count', 'last_reminder_sent', 'created_at', 'updated_at'
         ]
 
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 class DebtCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for creating/updating debts"""
+    """Serializer for creating/updating debts, handling frontend 'debtor' and 'creditor' names"""
+    # Expose the model's debtor_name field but make it not required for input, as it's set from 'debtor'
+    debtor_name = serializers.CharField(required=False)
+    debtor = serializers.CharField(write_only=True) # To capture the 'debtor' name from frontend
+    # Rename 'creditor' to 'creditor_name' to avoid direct conflict with model's 'creditor' field (ForeignKey)
+    creditor_name = serializers.CharField(write_only=True, required=False) # To capture the 'creditor' name from frontend
 
     class Meta:
         model = Debt
         fields = [
-            'debtor_name', 'debtor_email', 'debtor_phone', 'amount',
-            'description', 'due_date', 'notes'
+            'debtor_name', # Now explicitly managed in the serializer and can be optional
+            'debtor',      # Write-only field for incoming debtor name
+            'creditor_name', # Write-only field for incoming creditor name
+            'amount', 'description', 'due_date', 'notes',
+            'debtor_phone', 'debtor_email'
         ]
+        extra_kwargs = {
+            'debtor_email': {'required': False}, # Make explicit that email is not required from input
+            'debtor_phone': {'required': False}, # Make explicit that phone is not required from input
+            'creditor': {'required': False}, # Ensure the model's ForeignKey 'creditor' field is not required for input
+        }
 
     def create(self, validated_data):
+        # Pop the write_only fields first
+        debtor_name_from_frontend = validated_data.pop('debtor')
+        creditor_name_from_frontend = validated_data.pop('creditor_name', None)
+
+        # Assign the derived debtor_name to the model's debtor_name field
+        validated_data['debtor_name'] = debtor_name_from_frontend
+
         # Set original_amount to amount when creating
         validated_data['original_amount'] = validated_data['amount']
+
+        # Handle creditor lookup and assignment
+        if creditor_name_from_frontend:
+            try:
+                # Assuming 'username' is the field for the user's name
+                creditor_user = User.objects.get(username=creditor_name_from_frontend)
+                validated_data['creditor'] = creditor_user
+            except User.DoesNotExist:
+                # If creditor user not found, set creditor to None as per model's null=True
+                validated_data['creditor'] = None
+                # Optionally, you might want to log this or raise a more specific validation error
+                # raise serializers.ValidationError({"creditor": f"Creditor user '{creditor_name_from_frontend}' not found."})
+        else:
+            # If no creditor name was provided, ensure the creditor field is set to None
+            validated_data['creditor'] = None
+
         return super().create(validated_data)
 
     def validate_amount(self, value):

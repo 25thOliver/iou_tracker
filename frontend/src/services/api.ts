@@ -119,8 +119,9 @@ export const iouApi = {
 
 // Debt API
 export const debtApi = {
-  getAll: async (): Promise<Debt[]> => {
-    const response: AxiosResponse<Debt[]> = await api.get("/debts/");
+  getAll: async (): Promise<PaginatedResponse<Debt[]>> => {
+    const response: AxiosResponse<PaginatedResponse<Debt[]>> =
+      await api.get("/debts/");
     return response.data;
   },
 
