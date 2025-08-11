@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'debts',
     'notifications',
     'iou_app',
-    'backend.auth_app',
+    'auth_app',
     'drf_spectacular', # Add this line
 
 ]
