@@ -7,7 +7,7 @@ class IOU(models.Model):
     lender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='lent_ious')
     debtor = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.CharField(max_length=3, default='USD')
+    currency = models.CharField(max_length=3, default='KES')
     due_date = models.DateField(null=True, blank=True)
     description = models.TextField(blank=True, null=True)
     is_settled = models.BooleanField(default=False)
