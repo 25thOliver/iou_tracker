@@ -104,7 +104,7 @@
                     {{ formatDate(iou.due_date) }}
                     <span v-if="daysUntilDue !== null" :class="[
                       'ml-2 text-xs',
-                      daysUntilDue < 0 ? 'text-red-600' : 
+                      daysUntilDue < 0 ? 'text-red-600' :
                       daysUntilDue <= 7 ? 'text-yellow-600' : 'text-gray-500'
                     ]">
                       ({{ formatDaysUntilDue() }})
@@ -139,7 +139,7 @@
                 <PencilIcon class="h-4 w-4 mr-2" />
                 Edit IOU
               </router-link>
-              
+
               <button
                 v-if="iou.status === 'pending'"
                 @click="markAsPaid"
@@ -149,7 +149,7 @@
                 <CheckIcon class="h-4 w-4 mr-2" />
                 {{ isUpdating ? 'Updating...' : 'Mark as Paid' }}
               </button>
-              
+
               <button
                 v-if="iou.status === 'pending'"
                 @click="markAsCancelled"
@@ -290,17 +290,17 @@ const formatAmount = (amount: number): string => {
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { 
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'long', 
-    day: 'numeric' 
+    month: 'long',
+    day: 'numeric'
   })
 }
 
 const formatDaysUntilDue = (): string => {
   const days = daysUntilDue.value
   if (days === null) return ''
-  
+
   if (days < 0) {
     return `${Math.abs(days)} days overdue`
   } else if (days === 0) {
@@ -327,7 +327,7 @@ const getStatusColor = (status: string): string => {
 
 const markAsPaid = async () => {
   if (!iou.value) return
-  
+
   isUpdating.value = true
   try {
     await iouStore.updateIOU(iou.value.id, { status: 'paid' } as any)
@@ -340,7 +340,7 @@ const markAsPaid = async () => {
 
 const markAsCancelled = async () => {
   if (!iou.value) return
-  
+
   isUpdating.value = true
   try {
     await iouStore.updateIOU(iou.value.id, { status: 'cancelled' } as any)
@@ -353,7 +353,7 @@ const markAsCancelled = async () => {
 
 const handleDelete = async () => {
   if (!iou.value) return
-  
+
   isDeleting.value = true
   try {
     await iouStore.deleteIOU(iou.value.id)
@@ -368,7 +368,7 @@ const handleDelete = async () => {
 
 onMounted(async () => {
   try {
-    await iouStore.fetchIOUById(parseInt(iouId.value))
+    await iouStore.fetchIOUById(iouId.value)
   } catch (error) {
     console.error('Error loading IOU:', error)
   }
