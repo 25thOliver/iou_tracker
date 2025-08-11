@@ -133,7 +133,7 @@
                   'text-lg font-medium',
                   iou.is_owed_to_me ? 'text-green-600' : 'text-red-600'
                 ]">
-                  {{ iou.is_owed_to_me ? '+' : '-' }}${{ formatAmount(iou.amount) }}
+                  {{ iou.is_owed_to_me ? '+' : '-' }}KSh {{ formatAmount(iou.amount) }}
                 </p>
                 <p class="text-sm text-gray-500">
                   {{ iou.is_owed_to_me ? 'Owed to me' : 'I owe' }}
@@ -151,13 +151,13 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="text-center">
           <p class="text-2xl font-bold text-green-600">
-            ${{ formatAmount(summaryOwedToMe) }}
+            KSh {{ formatAmount(summaryOwedToMe) }}
           </p>
           <p class="text-sm text-gray-500">Total owed to me</p>
         </div>
         <div class="text-center">
           <p class="text-2xl font-bold text-red-600">
-            ${{ formatAmount(summaryIOwe) }}
+            KSh {{ formatAmount(summaryIOwe) }}
           </p>
           <p class="text-sm text-gray-500">Total I owe</p>
         </div>
@@ -217,22 +217,22 @@ const filteredIOUs = computed(() => {
   return filtered.sort((a, b) => {
     if (a.status === 'pending' && b.status !== 'pending') return -1
     if (a.status !== 'pending' && b.status === 'pending') return 1
-    
+
     const dueDateA = new Date(a.due_date).getTime()
     const dueDateB = new Date(b.due_date).getTime()
     if (dueDateA !== dueDateB) return dueDateA - dueDateB
-    
+
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   })
 })
 
-const summaryOwedToMe = computed(() => 
+const summaryOwedToMe = computed(() =>
   filteredIOUs.value
     .filter(iou => iou.is_owed_to_me && iou.status === 'pending')
     .reduce((sum, iou) => sum + iou.amount, 0)
 )
 
-const summaryIOwe = computed(() => 
+const summaryIOwe = computed(() =>
   filteredIOUs.value
     .filter(iou => !iou.is_owed_to_me && iou.status === 'pending')
     .reduce((sum, iou) => sum + iou.amount, 0)
@@ -244,10 +244,10 @@ const formatAmount = (amount: number): string => {
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { 
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'short', 
-    day: 'numeric' 
+    month: 'short',
+    day: 'numeric'
   })
 }
 
