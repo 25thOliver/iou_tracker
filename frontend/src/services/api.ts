@@ -91,12 +91,13 @@ export const authApi = {
 
 // IOU API
 export const iouApi = {
-  getAll: async (): Promise<IOU[]> => {
-    const response: AxiosResponse<IOU[]> = await api.get("/ious/");
+  getAll: async (): Promise<PaginatedResponse<IOU[]>> => {
+    const response: AxiosResponse<PaginatedResponse<IOU[]>> =
+      await api.get("/ious/");
     return response.data;
   },
 
-  getById: async (id: number): Promise<IOU> => {
+  getById: async (id: string): Promise<IOU> => {
     const response: AxiosResponse<IOU> = await api.get(`/ious/${id}/`);
     return response.data;
   },
@@ -106,12 +107,12 @@ export const iouApi = {
     return response.data;
   },
 
-  update: async (id: number, data: Partial<IOUCreate>): Promise<IOU> => {
+  update: async (id: string, data: Partial<IOUCreate>): Promise<IOU> => {
     const response: AxiosResponse<IOU> = await api.patch(`/ious/${id}/`, data);
     return response.data;
   },
 
-  delete: async (id: number): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     await api.delete(`/ious/${id}/`);
   },
 };
@@ -123,7 +124,7 @@ export const debtApi = {
     return response.data;
   },
 
-  getById: async (id: number): Promise<Debt> => {
+  getById: async (id: string): Promise<Debt> => {
     const response: AxiosResponse<Debt> = await api.get(`/debts/${id}/`);
     return response.data;
   },
@@ -133,7 +134,7 @@ export const debtApi = {
     return response.data;
   },
 
-  update: async (id: number, data: Partial<DebtCreate>): Promise<Debt> => {
+  update: async (id: string, data: Partial<DebtCreate>): Promise<Debt> => {
     const response: AxiosResponse<Debt> = await api.patch(
       `/debts/${id}/`,
       data,
@@ -141,7 +142,7 @@ export const debtApi = {
     return response.data;
   },
 
-  delete: async (id: number): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     await api.delete(`/debts/${id}/`);
   },
 };
@@ -154,7 +155,7 @@ export const notificationApi = {
     return response.data;
   },
 
-  markAsRead: async (id: number): Promise<Notification> => {
+  markAsRead: async (id: string): Promise<Notification> => {
     const response: AxiosResponse<Notification> = await api.patch(
       `/notifications/${id}/`,
       { read: true },

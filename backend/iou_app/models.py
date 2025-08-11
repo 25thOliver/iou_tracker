@@ -15,7 +15,7 @@ class IOU(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"IOU of {self.amount} {self.currency} from {self.lender.username} to {self.borrower_name}"
+        return f"IOU of {self.amount} {self.currency} from {self.lender.username} to {self.debtor}"
 
     class Meta:
         ordering = ['-created_at']
