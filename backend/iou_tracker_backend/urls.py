@@ -40,7 +40,7 @@ urlpatterns = [
     path('api/', api_root, name='api-root'),
     path('api/debts/', include('debts.urls')),
     path('api/ious/', include('iou_app.urls')),
-    path('api/auth/', include('backend.auth_app.urls')), # Include auth_app URLs
+    path('api/auth/', include('auth_app.urls')), # Include auth_app URLs
     # DRF Spectacular API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
