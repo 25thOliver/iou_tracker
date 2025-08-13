@@ -52,7 +52,7 @@ class DebtListCreateView(generics.ListCreateAPIView):
         return DebtListSerializer
 
     def perform_create(self, serializer):
-        """Set the current user as creditor when creating debt"""
+        """Set the current user as creditor when creating debt and log notification"""
         debt = serializer.save(creditor=self.request.user)
 
         # Send notification to debtor about new debt
@@ -62,17 +62,51 @@ class DebtListCreateView(generics.ListCreateAPIView):
         except Exception as e:
             logger.error(f"Failed to queue debt created notification: {str(e)}")
 
+        # Create notification log for creditor
+        try:
+            from notifications.models import NotificationLog
+            NotificationLog.objects.create(
+                user=self.request.user,
+                notification_type='debt_created',
+                channel='app',
+                status='sent',
+                subject=f"New Debt Created: {debt.amount} for {debt.debtor_name}",
+                message_body=f"You created a new debt for {debt.debtor_name} ({debt.debtor_email}) of {debt.amount} ({debt.description})",
+                related_object_id=str(debt.id)
+            )
+            # Also create notification log for debtor if they exist as a user
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            try:
+                debtor_user = User.objects.filter(email=debt.debtor_email).first()
+                if debtor_user:
+                    NotificationLog.objects.create(
+                        user=debtor_user,
+                        notification_type='debt_created',
+                        channel='app',
+                        status='sent',
+                        subject=f"New Debt Assigned: {debt.amount} from {self.request.user.get_full_name() or self.request.user.username}",
+                        message_body=f"A new debt of {debt.amount} ({debt.description}) was assigned to you by {self.request.user.get_full_name() or self.request.user.username}.",
+                        related_object_id=str(debt.id)
+                    )
+            except Exception as e:
+                logger.error(f"Failed to create notification log for debtor: {str(e)}")
+        except Exception as e:
+            logger.error(f"Failed to create notification log: {str(e)}")
+
 
 
 class DebtDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve, update, or delete a debt - only by creditor"""
     serializer_class = DebtDetailSerializer
-    permission_classes = [permissions.IsAuthenticated, IsCreditor]
+    permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'id'
 
     def get_queryset(self):
-        """Only allow access to user's own debts"""
-        return Debt.objects.filter(creditor=self.request.user)
+        """Allow access to debts where user is creditor or debtor (by email)"""
+        from django.db.models import Q
+        user = self.request.user
+        return Debt.objects.filter(Q(creditor=user) | Q(debtor_email=user.email))
 
     def get_serializer_class(self):
         """Use update serializer for PUT/PATCH requests"""
