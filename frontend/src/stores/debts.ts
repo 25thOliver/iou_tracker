@@ -6,6 +6,7 @@ import type { Debt, DebtCreate, PaginatedResponse } from "@/types/api";
 export const useDebtStore = defineStore("debts", () => {
   // State
   const debts = ref<Debt[]>([]);
+  const filteredDebts = ref<Debt[]>([]);
   const currentDebt = ref<Debt | null>(null);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
@@ -46,12 +47,31 @@ export const useDebtStore = defineStore("debts", () => {
   const fetchDebts = async () => {
     isLoading.value = true;
     error.value = null;
-
     try {
       const response = await debtApi.getAll();
       debts.value = response.results;
+      filteredDebts.value = response.results;
     } catch (err: any) {
       error.value = err.response?.data?.message || "Failed to fetch debts";
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const searchDebts = async (search: string) => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      if (!search) {
+        // If search is empty, show all debts
+        await fetchDebts();
+      } else {
+        const response = await debtApi.getAllWithSearch(search);
+        filteredDebts.value = response.results;
+      }
+    } catch (err: any) {
+      error.value = err.response?.data?.message || "Failed to search debts";
       throw err;
     } finally {
       isLoading.value = false;
@@ -141,6 +161,7 @@ export const useDebtStore = defineStore("debts", () => {
   return {
     // State
     debts,
+    filteredDebts,
     currentDebt,
     isLoading,
     error,
@@ -153,6 +174,7 @@ export const useDebtStore = defineStore("debts", () => {
     overdueDebts,
     // Actions
     fetchDebts,
+    searchDebts,
     fetchDebtById,
     createDebt,
     updateDebt,

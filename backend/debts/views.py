@@ -40,8 +40,10 @@ class DebtListCreateView(generics.ListCreateAPIView):
     ordering = ['-date_created']
 
     def get_queryset(self):
-        """Filter debts to show only those where user is creditor"""
-        return Debt.objects.filter(creditor=self.request.user)
+        """Filter debts to show only those where user is creditor or debtor (by email)"""
+        from django.db.models import Q
+        user = self.request.user
+        return Debt.objects.filter(Q(creditor=user) | Q(debtor_email=user.email))
 
     def get_serializer_class(self):
         """Use different serializers for list vs create"""

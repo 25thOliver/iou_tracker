@@ -125,6 +125,12 @@ export const debtApi = {
     return response.data;
   },
 
+  getAllWithSearch: async (search: string): Promise<PaginatedResponse<Debt[]>> => {
+    const response: AxiosResponse<PaginatedResponse<Debt[]>> =
+      await api.get("/debts/", { params: { search } });
+    return response.data;
+  },
+
   getById: async (id: string): Promise<Debt> => {
     const response: AxiosResponse<Debt> = await api.get(`/debts/${id}/`);
     return response.data;

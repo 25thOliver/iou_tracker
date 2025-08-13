@@ -133,7 +133,7 @@
                   'text-lg font-medium',
                   debt.is_owed_to_me ? 'text-green-600' : 'text-red-600'
                 ]">
-                  {{ debt.is_owed_to_me ? '+' : '-' }}${{ formatAmount(debt.amount) }}
+                  {{ debt.is_owed_to_me ? '+' : '-' }}KSh {{ formatAmount(debt.amount) }}
                 </p>
                 <p class="text-sm text-gray-500">
                   {{ debt.is_owed_to_me ? 'Owed to me' : 'I owe' }}
@@ -151,13 +151,13 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="text-center">
           <p class="text-2xl font-bold text-green-600">
-            ${{ formatAmount(summaryOwedToMe) }}
+            KSh {{ formatAmount(summaryOwedToMe) }}
           </p>
           <p class="text-sm text-gray-500">Total owed to me</p>
         </div>
         <div class="text-center">
           <p class="text-2xl font-bold text-red-600">
-            ${{ formatAmount(summaryIOwe) }}
+            KSh {{ formatAmount(summaryIOwe) }}
           </p>
           <p class="text-sm text-gray-500">Total I owe</p>
         </div>
@@ -173,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import {
   BanknotesIcon,
   MagnifyingGlassIcon,
@@ -188,51 +188,43 @@ const filterType = ref('all')
 const filterStatus = ref('all')
 const searchQuery = ref('')
 
+// Use backend search for live search
 const filteredDebts = computed(() => {
-  let filtered = [...debtStore.debts]
-
+  let filtered = [...debtStore.filteredDebts]
   // Filter by type
   if (filterType.value === 'owed_to_me') {
     filtered = filtered.filter(debt => debt.is_owed_to_me)
   } else if (filterType.value === 'i_owe') {
     filtered = filtered.filter(debt => !debt.is_owed_to_me)
   }
-
   // Filter by status
   if (filterStatus.value !== 'all') {
     filtered = filtered.filter(debt => debt.status === filterStatus.value)
   }
-
-  // Search filter
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(debt =>
-      debt.description.toLowerCase().includes(query) ||
-      debt.debtor.toLowerCase().includes(query) ||
-      debt.creditor.toLowerCase().includes(query)
-    )
-  }
-
   // Sort by due date (closest first) and then by creation date (newest first)
   return filtered.sort((a, b) => {
     if (a.status === 'pending' && b.status !== 'pending') return -1
     if (a.status !== 'pending' && b.status === 'pending') return 1
-    
     const dueDateA = new Date(a.due_date).getTime()
     const dueDateB = new Date(b.due_date).getTime()
     if (dueDateA !== dueDateB) return dueDateA - dueDateB
-    
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   })
 })
 
-const summaryOwedToMe = computed(() => 
+// Live search: watch searchQuery and call backend
+watch(searchQuery, (newQuery) => {
+  debtStore.searchDebts(newQuery)
+})
+
+
+const summaryOwedToMe = computed(() =>
   filteredDebts.value
     .filter(debt => debt.is_owed_to_me && debt.status === 'pending')
     .reduce((sum, debt) => sum + debt.amount, 0)
 )
 
-const summaryIOwe = computed(() => 
+const summaryIOwe = computed(() =>
   filteredDebts.value
     .filter(debt => !debt.is_owed_to_me && debt.status === 'pending')
     .reduce((sum, debt) => sum + debt.amount, 0)
@@ -244,10 +236,10 @@ const formatAmount = (amount: number): string => {
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { 
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'short', 
-    day: 'numeric' 
+    month: 'short',
+    day: 'numeric'
   })
 }
 

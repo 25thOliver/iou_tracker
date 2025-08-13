@@ -42,6 +42,7 @@ class DebtListSerializer(serializers.ModelSerializer):
     is_overdue = serializers.ReadOnlyField()
     days_overdue = serializers.ReadOnlyField()
     amount_paid = serializers.ReadOnlyField()
+    is_owed_to_me = serializers.SerializerMethodField()
 
     class Meta:
         model = Debt
@@ -49,8 +50,14 @@ class DebtListSerializer(serializers.ModelSerializer):
             'id', 'debtor_name', 'debtor_email', 'amount', 'original_amount',
             'description', 'status', 'due_date', 'reminder_count',
             'payment_plan_offered', 'is_overdue', 'days_overdue',
-            'amount_paid', 'created_at'
+            'amount_paid', 'is_owed_to_me', 'created_at'
         ]
+
+    def get_is_owed_to_me(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            return obj.creditor == request.user
+        return False
 
 class DebtDetailSerializer(serializers.ModelSerializer):
     """Serializer for debt detail view - all fields and related data"""
@@ -60,6 +67,7 @@ class DebtDetailSerializer(serializers.ModelSerializer):
     is_overdue = serializers.ReadOnlyField()
     days_overdue = serializers.ReadOnlyField()
     amount_paid = serializers.ReadOnlyField()
+    is_owed_to_me = serializers.SerializerMethodField()
 
     class Meta:
         model = Debt
@@ -68,11 +76,17 @@ class DebtDetailSerializer(serializers.ModelSerializer):
             'original_amount', 'description', 'due_date', 'status',
             'reminder_count', 'last_reminder_sent', 'payment_plan_offered',
             'notes', 'is_overdue', 'days_overdue', 'amount_paid',
-            'payment_plan', 'payments', 'reminder_logs', 'created_at', 'updated_at'
+            'payment_plan', 'payments', 'reminder_logs', 'is_owed_to_me', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'reminder_count', 'last_reminder_sent', 'created_at', 'updated_at'
         ]
+
+    def get_is_owed_to_me(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            return obj.creditor == request.user
+        return False
 
 from django.contrib.auth import get_user_model
 
