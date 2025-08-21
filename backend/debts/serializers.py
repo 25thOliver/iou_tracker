@@ -48,7 +48,7 @@ class DebtListSerializer(serializers.ModelSerializer):
         model = Debt
         fields = [
             'id', 'debtor_name', 'debtor_email', 'amount', 'original_amount',
-            'description', 'status', 'due_date', 'reminder_count',
+            'currency', 'description', 'status', 'due_date', 'reminder_count',
             'payment_plan_offered', 'is_overdue', 'days_overdue',
             'amount_paid', 'is_owed_to_me', 'created_at'
         ]
@@ -73,7 +73,7 @@ class DebtDetailSerializer(serializers.ModelSerializer):
         model = Debt
         fields = [
             'id', 'debtor_name', 'debtor_email', 'debtor_phone', 'amount',
-            'original_amount', 'description', 'due_date', 'status',
+            'original_amount', 'currency', 'description', 'due_date', 'status',
             'reminder_count', 'last_reminder_sent', 'payment_plan_offered',
             'notes', 'is_overdue', 'days_overdue', 'amount_paid',
             'payment_plan', 'payments', 'reminder_logs', 'is_owed_to_me', 'created_at', 'updated_at'

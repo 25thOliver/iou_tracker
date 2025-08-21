@@ -77,10 +77,10 @@
                 </div>
                 <div class="text-right">
                   <p :class="[
-                    'text-3xl font-bold',
+                    'text-2xl font-bold',
                     iou.is_owed_to_me ? 'text-green-600' : 'text-red-600'
                   ]">
-                    {{ iou.is_owed_to_me ? '+' : '-' }}${{ formatAmount(iou.amount) }}
+                    {{ iou.is_owed_to_me ? '+' : '-' }}KES {{ formatAmount(iou.amount) }}
                   </p>
                   <p class="text-sm text-gray-500">
                     {{ iou.is_owed_to_me ? 'Owed to me' : 'I owe' }}
@@ -176,7 +176,7 @@
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-gray-500">Amount:</span>
-                <span class="font-medium">${{ formatAmount(iou.amount) }}</span>
+                <span class="font-medium">KES {{ formatAmount(iou.amount) }}</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-gray-500">Status:</span>

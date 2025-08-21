@@ -46,7 +46,7 @@
         <!-- Amount -->
         <div>
           <label for="amount" class="block text-sm font-medium text-gray-700">
-            Amount ($) *
+            Amount (KES) *
           </label>
           <div class="mt-1">
             <input
@@ -62,6 +62,30 @@
             />
             <p v-if="errors.amount" class="mt-1 text-sm text-red-600">
               {{ errors.amount }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Currency -->
+        <div>
+          <label for="currency" class="block text-sm font-medium text-gray-700">
+            Currency *
+          </label>
+          <div class="mt-1">
+            <select
+              id="currency"
+              v-model="form.currency"
+              required
+              class="input-field"
+              :class="{ 'border-red-300': errors.currency }"
+            >
+              <option value="KES">KES (Kenyan Shilling)</option>
+              <option value="USD">USD (US Dollar)</option>
+              <option value="EUR">EUR (Euro)</option>
+              <option value="GBP">GBP (British Pound)</option>
+            </select>
+            <p v-if="errors.currency" class="mt-1 text-sm text-red-600">
+              {{ errors.currency }}
             </p>
           </div>
         </div>
@@ -204,7 +228,8 @@ const form = reactive<DebtCreate>({
   amount: 0,
   debtor: '',
   creditor: '',
-  due_date: ''
+  due_date: '',
+  currency: 'KES' // Added currency field
 })
 
 const errors = ref<Record<string, string>>({})
@@ -222,6 +247,10 @@ const validateForm = (): boolean => {
     errors.value.amount = 'Amount must be greater than 0'
   }
   
+  if (!form.currency) {
+    errors.value.currency = 'Currency is required'
+  }
+
   if (!form.debtor.trim()) {
     errors.value.debtor = 'Debtor name is required'
   }
@@ -280,6 +309,7 @@ const loadDebtForEdit = async () => {
     if (debt) {
       form.description = debt.description
       form.amount = debt.amount
+      form.currency = debt.currency // Load currency
       form.debtor = debt.debtor
       form.creditor = debt.creditor
       form.due_date = debt.due_date.split('T')[0] // Convert to YYYY-MM-DD format

@@ -140,7 +140,7 @@
                   'text-lg font-medium',
                   iou.is_owed_to_me ? 'text-green-600' : 'text-red-600'
                 ]">
-                  {{ iou.is_owed_to_me ? '+' : '-' }}KSh {{ formatAmount(iou.amount) }}
+                  {{ iou.is_owed_to_me ? '+' : '-' }}{{ iou.currency }} {{ formatAmount(iou.amount) }}
                 </p>
                 <p class="text-sm text-gray-500">
                   {{ iou.is_owed_to_me ? 'Owed to me' : 'I owe' }}
@@ -158,13 +158,13 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="text-center">
           <p class="text-2xl font-bold text-green-600">
-            KSh {{ formatAmount(summaryOwedToMe) }}
+            {{ formatAmount(summaryOwedToMe) }}
           </p>
           <p class="text-sm text-gray-500">Total owed to me</p>
         </div>
         <div class="text-center">
           <p class="text-2xl font-bold text-red-600">
-            KSh {{ formatAmount(summaryIOwe) }}
+            {{ formatAmount(summaryIOwe) }}
           </p>
           <p class="text-sm text-gray-500">Total I owe</p>
         </div>

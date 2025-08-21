@@ -41,7 +41,7 @@
                   Owed to me
                 </dt>
                 <dd class="text-lg font-medium text-gray-900">
-                  ${{ formatAmount(totalOwedToMe) }}
+                  {{ formatAmount(totalOwedToMe) }}
                 </dd>
               </dl>
             </div>
@@ -64,7 +64,7 @@
                   I owe
                 </dt>
                 <dd class="text-lg font-medium text-gray-900">
-                  ${{ formatAmount(totalIOwe) }}
+                  {{ formatAmount(totalIOwe) }}
                 </dd>
               </dl>
             </div>
@@ -167,10 +167,10 @@
               </div>
               <div class="text-right">
                 <p :class="[
-                  'text-sm font-medium',
+                  'text-lg font-medium',
                   iou.is_owed_to_me ? 'text-green-600' : 'text-red-600'
                 ]">
-                  {{ iou.is_owed_to_me ? '+' : '-' }}${{ formatAmount(iou.amount) }}
+                  {{ iou.is_owed_to_me ? '+' : '-' }}{{ iou.currency }} {{ formatAmount(iou.amount) }}
                 </p>
                 <span :class="[
                   'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
@@ -214,7 +214,7 @@
               </div>
               <div class="text-right">
                 <p class="text-sm font-medium text-gray-900">
-                  ${{ formatAmount(item.amount) }}
+                  {{ item.currency }} {{ formatAmount(item.amount) }}
                 </p>
                 <p :class="[
                   'text-sm',

@@ -33,6 +33,7 @@ export interface IOU {
   description: string;
   debtor: string;
   creditor: string;
+  currency: string;
   due_date: string;
   created_at: string;
   updated_at: string;
@@ -46,6 +47,7 @@ export interface IOUCreate {
   description: string;
   debtor: string;
   creditor: string;
+  currency: string;
   due_date: string;
 }
 
@@ -55,6 +57,7 @@ export interface Debt {
   description: string;
   debtor: string;
   creditor: string;
+  currency: string;
   due_date: string;
   created_at: string;
   updated_at: string;
@@ -68,6 +71,7 @@ export interface DebtCreate {
   description: string;
   debtor: string;
   creditor: string;
+  currency: string;
   due_date: string;
 }
 

@@ -142,11 +142,11 @@
             <p class="text-sm text-gray-500">Total Debts</p>
           </div>
           <div class="text-center">
-            <p class="text-2xl font-bold text-green-600">${{ formatAmount(stats.totalOwedToMe) }}</p>
+            <p class="text-2xl font-bold text-green-600">{{ formatAmount(stats.totalOwedToMe) }}</p>
             <p class="text-sm text-gray-500">Owed to me</p>
           </div>
           <div class="text-center">
-            <p class="text-2xl font-bold text-red-600">${{ formatAmount(stats.totalIOwe) }}</p>
+            <p class="text-2xl font-bold text-red-600">{{ formatAmount(stats.totalIOwe) }}</p>
             <p class="text-sm text-gray-500">I owe</p>
           </div>
         </div>

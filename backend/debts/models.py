@@ -31,6 +31,7 @@ class Debt(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
+    currency = models.CharField(max_length=3, default='KES')
     description = models.TextField(help_text="What was the money for?")
 
     # Dates
@@ -61,7 +62,7 @@ class Debt(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.debtor_name} owes ${self.amount} for {self.description[:50]}"
+        return f"{self.debtor_name} owes {self.currency}{self.amount} for {self.description[:50]}"
 
     @property
     def is_overdue(self):
@@ -122,7 +123,7 @@ class PaymentPlan(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Payment plan for {self.debt.debtor_name}: ${self.installment_amount} {self.frequency}"
+        return f"Payment plan for {self.debt.debtor_name}: {self.debt.currency}{self.installment_amount} {self.frequency}"
 
     @property
     def completion_percentage(self):
@@ -170,7 +171,7 @@ class PaymentRecord(models.Model):
         ordering = ['-date_paid']
 
     def __str__(self):
-        return f"${self.amount} payment from {self.debt.debtor_name} on {self.date_paid.date()}"
+        return f"{self.debt.currency}{self.amount} payment from {self.debt.debtor_name} on {self.date_paid.date()}"
 
 
 class ReminderTemplate(models.Model):
