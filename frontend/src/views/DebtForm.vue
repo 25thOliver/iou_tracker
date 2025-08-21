@@ -91,46 +91,119 @@
         </div>
 
         <!-- Who owes whom -->
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <!-- Debtor -->
-          <div>
-            <label for="debtor" class="block text-sm font-medium text-gray-700">
-              Debtor (who owes money) *
-            </label>
-            <div class="mt-1">
-              <input
-                id="debtor"
-                v-model="form.debtor"
-                type="text"
-                required
-                placeholder="Name of person who owes"
-                class="input-field"
-                :class="{ 'border-red-300': errors.debtor }"
-              />
-              <p v-if="errors.debtor" class="mt-1 text-sm text-red-600">
-                {{ errors.debtor }}
-              </p>
+        <div class="space-y-4">
+          <!-- Debt Type Toggle -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center">
+                <input
+                  v-model="debtType"
+                  type="radio"
+                  value="lending"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span class="ml-2 text-sm font-medium text-gray-700">I'm lending money</span>
+              </label>
+              <label class="flex items-center">
+                <input
+                  v-model="debtType"
+                  type="radio"
+                  value="borrowing"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span class="ml-2 text-sm font-medium text-gray-700">I'm borrowing money</span>
+              </label>
             </div>
           </div>
 
-          <!-- Creditor -->
-          <div>
-            <label for="creditor" class="block text-sm font-medium text-gray-700">
-              Creditor (who is owed money) *
-            </label>
-            <div class="mt-1">
-              <input
-                id="creditor"
-                v-model="form.creditor"
-                type="text"
-                required
-                placeholder="Name of person who is owed"
-                class="input-field"
-                :class="{ 'border-red-300': errors.creditor }"
-              />
-              <p v-if="errors.creditor" class="mt-1 text-sm text-red-600">
-                {{ errors.creditor }}
-              </p>
+          <!-- Dynamic form based on Debt type -->
+          <div v-if="debtType === 'lending'" class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <!-- Debtor (who owes money) -->
+            <div>
+              <label for="debtor" class="block text-sm font-medium text-gray-700">
+                Who owes me money? *
+              </label>
+              <div class="mt-1">
+                <input
+                  id="debtor"
+                  v-model="form.debtor"
+                  type="text"
+                  required
+                  placeholder="Name of person who owes you"
+                  class="input-field"
+                  :class="{ 'border-red-300': errors.debtor }"
+                />
+                <p v-if="errors.debtor" class="mt-1 text-sm text-red-600">
+                  {{ errors.debtor }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Creditor (you) - auto-filled -->
+            <div>
+              <label for="creditor" class="block text-sm font-medium text-gray-700">
+                Who is owed money? *
+              </label>
+              <div class="mt-1">
+                <input
+                  id="creditor"
+                  v-model="form.creditor"
+                  type="text"
+                  required
+                  readonly
+                  class="input-field bg-gray-100 cursor-not-allowed"
+                  :class="{ 'border-red-300': errors.creditor }"
+                />
+                <p class="mt-1 text-xs text-gray-500">This is you (auto-filled)</p>
+                <p v-if="errors.creditor" class="mt-1 text-sm text-red-600">
+                  {{ errors.creditor }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="debtType === 'borrowing'" class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <!-- Debtor (you) - auto-filled -->
+            <div>
+              <label for="debtor" class="block text-sm font-medium text-gray-700">
+                Who owes money? *
+              </label>
+              <div class="mt-1">
+                <input
+                  id="debtor"
+                  v-model="form.debtor"
+                  type="text"
+                  required
+                  readonly
+                  class="input-field bg-gray-100 cursor-not-allowed"
+                  :class="{ 'border-red-300': errors.debtor }"
+                />
+                <p class="mt-1 text-xs text-gray-500">This is you (auto-filled)</p>
+                <p v-if="errors.debtor" class="mt-1 text-sm text-red-600">
+                  {{ errors.debtor }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Creditor (who you owe) -->
+            <div>
+              <label for="creditor" class="block text-sm font-medium text-gray-700">
+                Who are you paying back? *
+              </label>
+              <div class="mt-1">
+                <input
+                  id="creditor"
+                  v-model="form.creditor"
+                  type="text"
+                  required
+                  placeholder="Name of person you owe"
+                  class="input-field"
+                  :class="{ 'border-red-300': errors.creditor }"
+                />
+                <p v-if="errors.creditor" class="mt-1 text-sm text-red-600">
+                  {{ errors.creditor }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -204,11 +277,12 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { InformationCircleIcon } from '@heroicons/vue/24/outline'
 import { useDebtStore } from '@/stores/debts'
 import type { DebtCreate } from '@/types/api'
+import { useAuthStore } from '@/stores/auth'
 
 interface Props {
   id?: string
@@ -219,6 +293,7 @@ const props = defineProps<Props>()
 const router = useRouter()
 const route = useRoute()
 const debtStore = useDebtStore()
+const authStore = useAuthStore()
 
 const isEdit = computed(() => !!props.id || !!route.params.id)
 const debtId = computed(() => props.id || route.params.id as string)
@@ -235,6 +310,19 @@ const form = reactive<DebtCreate>({
 const errors = ref<Record<string, string>>({})
 const error = ref<string | null>(null)
 const isLoading = ref(false)
+const debtType = ref<'lending' | 'borrowing'>('lending')
+
+const updateFormFields = () => {
+  if (debtType.value === 'lending') {
+    form.creditor = authStore.username || ''
+    form.debtor = ''
+  } else {
+    form.debtor = authStore.username || ''
+    form.creditor = ''
+  }
+}
+
+watch(debtType, updateFormFields)
 
 const validateForm = (): boolean => {
   errors.value = {}
@@ -326,6 +414,7 @@ onMounted(() => {
     const nextMonth = new Date()
     nextMonth.setMonth(nextMonth.getMonth() + 1)
     form.due_date = nextMonth.toISOString().split('T')[0]
+    updateFormFields()
   } else {
     loadDebtForEdit()
   }

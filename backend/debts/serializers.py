@@ -43,11 +43,13 @@ class DebtListSerializer(serializers.ModelSerializer):
     days_overdue = serializers.ReadOnlyField()
     amount_paid = serializers.ReadOnlyField()
     is_owed_to_me = serializers.SerializerMethodField()
+    debtor = serializers.CharField(source='debtor_name', read_only=True)
+    creditor = serializers.SerializerMethodField()
 
     class Meta:
         model = Debt
         fields = [
-            'id', 'debtor_name', 'debtor_email', 'amount', 'original_amount',
+            'id', 'debtor', 'creditor', 'debtor_email', 'amount', 'original_amount',
             'currency', 'description', 'status', 'due_date', 'reminder_count',
             'payment_plan_offered', 'is_overdue', 'days_overdue',
             'amount_paid', 'is_owed_to_me', 'created_at'
@@ -59,6 +61,9 @@ class DebtListSerializer(serializers.ModelSerializer):
             return obj.creditor == request.user
         return False
 
+    def get_creditor(self, obj):
+        return obj.creditor.username if obj.creditor else ''
+
 class DebtDetailSerializer(serializers.ModelSerializer):
     """Serializer for debt detail view - all fields and related data"""
     payment_plan = PaymentPlanSerializer(read_only=True)
@@ -68,11 +73,13 @@ class DebtDetailSerializer(serializers.ModelSerializer):
     days_overdue = serializers.ReadOnlyField()
     amount_paid = serializers.ReadOnlyField()
     is_owed_to_me = serializers.SerializerMethodField()
+    debtor = serializers.CharField(source='debtor_name', read_only=True)
+    creditor = serializers.SerializerMethodField()
 
     class Meta:
         model = Debt
         fields = [
-            'id', 'debtor_name', 'debtor_email', 'debtor_phone', 'amount',
+            'id', 'debtor', 'creditor', 'debtor_email', 'debtor_phone', 'amount',
             'original_amount', 'currency', 'description', 'due_date', 'status',
             'reminder_count', 'last_reminder_sent', 'payment_plan_offered',
             'notes', 'is_overdue', 'days_overdue', 'amount_paid',
@@ -88,6 +95,9 @@ class DebtDetailSerializer(serializers.ModelSerializer):
             return obj.creditor == request.user
         return False
 
+    def get_creditor(self, obj):
+        return obj.creditor.username if obj.creditor else ''
+
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -99,6 +109,8 @@ class DebtCreateUpdateSerializer(serializers.ModelSerializer):
     debtor = serializers.CharField(write_only=True) # To capture the 'debtor' name from frontend
     # Rename 'creditor' to 'creditor_name' to avoid direct conflict with model's 'creditor' field (ForeignKey)
     creditor_name = serializers.CharField(write_only=True, required=False) # To capture the 'creditor' name from frontend
+    # Backwards-compat alias: accept 'creditor' as a write-only string and map it to creditor_name
+    creditor = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = Debt
@@ -106,7 +118,8 @@ class DebtCreateUpdateSerializer(serializers.ModelSerializer):
             'debtor_name', # Now explicitly managed in the serializer and can be optional
             'debtor',      # Write-only field for incoming debtor name
             'creditor_name', # Write-only field for incoming creditor name
-            'amount', 'description', 'due_date', 'notes',
+            'creditor', # alias
+            'amount', 'currency', 'description', 'due_date', 'notes',
             'debtor_phone', 'debtor_email'
         ]
         extra_kwargs = {
@@ -119,6 +132,10 @@ class DebtCreateUpdateSerializer(serializers.ModelSerializer):
         # Pop the write_only fields first
         debtor_name_from_frontend = validated_data.pop('debtor')
         creditor_name_from_frontend = validated_data.pop('creditor_name', None)
+        # If 'creditor' alias provided, use it if creditor_name is missing
+        creditor_alias = validated_data.pop('creditor', None)
+        if not creditor_name_from_frontend and creditor_alias:
+            creditor_name_from_frontend = creditor_alias
 
         # Assign the derived debtor_name to the model's debtor_name field
         validated_data['debtor_name'] = debtor_name_from_frontend

@@ -40,10 +40,12 @@ class DebtListCreateView(generics.ListCreateAPIView):
     ordering = ['-date_created']
 
     def get_queryset(self):
-        """Filter debts to show only those where user is creditor or debtor (by email)"""
+        """Show debts where user is creditor, debtor by email, or debtor by username."""
         from django.db.models import Q
         user = self.request.user
-        return Debt.objects.filter(Q(creditor=user) | Q(debtor_email=user.email))
+        return Debt.objects.filter(
+            Q(creditor=user) | Q(debtor_email=user.email) | Q(debtor_name__iexact=user.username)
+        )
 
     def get_serializer_class(self):
         """Use different serializers for list vs create"""
@@ -52,13 +54,30 @@ class DebtListCreateView(generics.ListCreateAPIView):
         return DebtListSerializer
 
     def perform_create(self, serializer):
-        """Set the current user as creditor when creating debt and log notification"""
-        debt = serializer.save(creditor=self.request.user)
+        """Respect provided creditor if resolved; otherwise allow null. Auto-fill debtor_email for borrower."""
+        provided_creditor = serializer.validated_data.get('creditor')
+        # Save without forcing creditor when not provided/resolved
+        if provided_creditor is not None:
+            debt = serializer.save(creditor=provided_creditor)
+        else:
+            debt = serializer.save()
 
-        # Send notification to debtor about new debt
+        # If current user is the debtor (borrowing) and debtor_email is empty, set it to user's email
         try:
-            send_debt_created_notification_task.delay(debt.id)
-            logger.info(f"Debt created notification queued for debt {debt.id}")
+            if (not debt.debtor_email) and (
+                (debt.debtor_name or '').strip().lower() == (self.request.user.username or '').strip().lower()
+            ):
+                debt.debtor_email = self.request.user.email
+                debt.save(update_fields=['debtor_email'])
+        except Exception:
+            pass
+
+        # Send notification to debtor about new debt (optional)
+        try:
+            from django.conf import settings
+            if getattr(settings, 'CELERY_ENABLED', False):
+                send_debt_created_notification_task.delay(debt.id)
+                logger.info(f"Debt created notification queued for debt {debt.id}")
         except Exception as e:
             logger.error(f"Failed to queue debt created notification: {str(e)}")
 
@@ -94,6 +113,19 @@ class DebtListCreateView(generics.ListCreateAPIView):
         except Exception as e:
             logger.error(f"Failed to create notification log: {str(e)}")
 
+    def create(self, request, *args, **kwargs):
+        """Return a full debt object after creation so the frontend can use it immediately."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        # Retrieve the created instance; it's available via serializer.instance
+        created_debt = serializer.instance
+        from rest_framework.response import Response
+        from rest_framework import status
+        # Return list serializer shape for consistency with list view
+        data = DebtListSerializer(created_debt, context={'request': request}).data
+        headers = self.get_success_headers(serializer.data)
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class DebtDetailView(generics.RetrieveUpdateDestroyAPIView):

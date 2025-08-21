@@ -133,7 +133,7 @@
                   'text-lg font-medium',
                   debt.is_owed_to_me ? 'text-green-600' : 'text-red-600'
                 ]">
-                  {{ debt.is_owed_to_me ? '+' : '-' }}KSh {{ formatAmount(debt.amount) }}
+                  {{ debt.is_owed_to_me ? '+' : '-' }}{{ debt.currency }} {{ formatAmount(debt.amount) }}
                 </p>
                 <p class="text-sm text-gray-500">
                   {{ debt.is_owed_to_me ? 'Owed to me' : 'I owe' }}
@@ -150,15 +150,11 @@
       <h3 class="text-lg font-medium text-gray-900 mb-4">Summary</h3>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="text-center">
-          <p class="text-2xl font-bold text-green-600">
-            KSh {{ formatAmount(summaryOwedToMe) }}
-          </p>
+          <p class="text-2xl font-bold text-green-600">{{ formatAmount(summaryOwedToMe) }}</p>
           <p class="text-sm text-gray-500">Total owed to me</p>
         </div>
         <div class="text-center">
-          <p class="text-2xl font-bold text-red-600">
-            KSh {{ formatAmount(summaryIOwe) }}
-          </p>
+          <p class="text-2xl font-bold text-red-600">{{ formatAmount(summaryIOwe) }}</p>
           <p class="text-sm text-gray-500">Total I owe</p>
         </div>
         <div class="text-center">
