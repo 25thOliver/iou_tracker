@@ -101,6 +101,8 @@ export const useDebtStore = defineStore("debts", () => {
     try {
       const newDebt = await debtApi.create(data);
       debts.value.push(newDebt);
+      // Keep filteredDebts in sync so newly created item shows immediately
+      filteredDebts.value = [...debts.value];
       return newDebt;
     } catch (err: any) {
       error.value = err.response?.data?.message || "Failed to create debt";
@@ -123,6 +125,7 @@ export const useDebtStore = defineStore("debts", () => {
       if (currentDebt.value?.id === id) {
         currentDebt.value = updatedDebt;
       }
+      filteredDebts.value = [...debts.value];
       return updatedDebt;
     } catch (err: any) {
       error.value = err.response?.data?.message || "Failed to update debt";
@@ -139,6 +142,7 @@ export const useDebtStore = defineStore("debts", () => {
     try {
       await debtApi.delete(id);
       debts.value = debts.value.filter((debt) => debt.id !== id);
+      filteredDebts.value = [...debts.value];
       if (currentDebt.value?.id === id) {
         currentDebt.value = null;
       }

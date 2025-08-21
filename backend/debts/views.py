@@ -40,12 +40,14 @@ class DebtListCreateView(generics.ListCreateAPIView):
     ordering = ['-date_created']
 
     def get_queryset(self):
-        """Show debts where user is creditor, debtor by email, or debtor by username."""
+        """Show debts where user is creditor, debtor by email, or debtor by username/full name."""
         from django.db.models import Q
         user = self.request.user
-        return Debt.objects.filter(
-            Q(creditor=user) | Q(debtor_email=user.email) | Q(debtor_name__iexact=user.username)
-        )
+        conditions = Q(creditor=user) | Q(debtor_email=user.email) | Q(debtor_name__iexact=user.username)
+        full_name = (user.get_full_name() or '').strip()
+        if full_name:
+            conditions = conditions | Q(debtor_name__iexact=full_name)
+        return Debt.objects.filter(conditions)
 
     def get_serializer_class(self):
         """Use different serializers for list vs create"""
@@ -135,10 +137,14 @@ class DebtDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'id'
 
     def get_queryset(self):
-        """Allow access to debts where user is creditor or debtor (by email)"""
+        """Allow access to debts where user is creditor, debtor by email, or debtor by username/full name."""
         from django.db.models import Q
         user = self.request.user
-        return Debt.objects.filter(Q(creditor=user) | Q(debtor_email=user.email))
+        conditions = Q(creditor=user) | Q(debtor_email=user.email) | Q(debtor_name__iexact=user.username)
+        full_name = (user.get_full_name() or '').strip()
+        if full_name:
+            conditions = conditions | Q(debtor_name__iexact=full_name)
+        return Debt.objects.filter(conditions)
 
     def get_serializer_class(self):
         """Use update serializer for PUT/PATCH requests"""

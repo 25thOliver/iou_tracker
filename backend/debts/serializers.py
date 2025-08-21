@@ -46,6 +46,8 @@ class DebtListSerializer(serializers.ModelSerializer):
     debtor = serializers.CharField(source='debtor_name', read_only=True)
     creditor = serializers.SerializerMethodField()
 
+    status = serializers.SerializerMethodField()
+
     class Meta:
         model = Debt
         fields = [
@@ -64,6 +66,15 @@ class DebtListSerializer(serializers.ModelSerializer):
     def get_creditor(self, obj):
         return obj.creditor.username if obj.creditor else ''
 
+    def get_status(self, obj):
+        # Map backend statuses to frontend statuses
+        if obj.status == 'paid':
+            return 'paid'
+        if obj.status == 'cancelled':
+            return 'cancelled'
+        # 'active', 'overdue', 'disputed' -> treat as 'pending' for UI
+        return 'pending'
+
 class DebtDetailSerializer(serializers.ModelSerializer):
     """Serializer for debt detail view - all fields and related data"""
     payment_plan = PaymentPlanSerializer(read_only=True)
@@ -75,6 +86,8 @@ class DebtDetailSerializer(serializers.ModelSerializer):
     is_owed_to_me = serializers.SerializerMethodField()
     debtor = serializers.CharField(source='debtor_name', read_only=True)
     creditor = serializers.SerializerMethodField()
+
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = Debt
@@ -97,6 +110,13 @@ class DebtDetailSerializer(serializers.ModelSerializer):
 
     def get_creditor(self, obj):
         return obj.creditor.username if obj.creditor else ''
+
+    def get_status(self, obj):
+        if obj.status == 'paid':
+            return 'paid'
+        if obj.status == 'cancelled':
+            return 'cancelled'
+        return 'pending'
 
 from django.contrib.auth import get_user_model
 

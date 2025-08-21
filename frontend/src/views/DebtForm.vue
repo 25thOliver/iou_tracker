@@ -370,7 +370,7 @@ const handleSubmit = async () => {
   
   try {
     if (isEdit.value) {
-      await debtStore.updateDebt(parseInt(debtId.value), form)
+      await debtStore.updateDebt(debtId.value as string, form)
     } else {
       await debtStore.createDebt(form)
     }
@@ -393,7 +393,7 @@ const loadDebtForEdit = async () => {
   if (!isEdit.value) return
   
   try {
-    const debt = await debtStore.fetchDebtById(parseInt(debtId.value))
+    const debt = await debtStore.fetchDebtById(debtId.value as string)
     if (debt) {
       form.description = debt.description
       form.amount = debt.amount

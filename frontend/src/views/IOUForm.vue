@@ -383,7 +383,7 @@ const handleSubmit = async () => {
   
   try {
     if (isEdit.value) {
-      await iouStore.updateIOU(parseInt(iouId.value), form)
+      await iouStore.updateIOU(iouId.value as string, form)
     } else {
       await iouStore.createIOU(form)
     }
@@ -406,7 +406,7 @@ const loadIOUForEdit = async () => {
   if (!isEdit.value) return
   
   try {
-    const iou = await iouStore.fetchIOUById(parseInt(iouId.value))
+    const iou = await iouStore.fetchIOUById(iouId.value as string)
     if (iou) {
       form.description = iou.description
       form.amount = iou.amount

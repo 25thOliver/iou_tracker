@@ -368,7 +368,7 @@ const handleDelete = async () => {
 
 onMounted(async () => {
   try {
-    await debtStore.fetchDebtById(parseInt(debtId.value))
+    await debtStore.fetchDebtById(debtId.value as string)
   } catch (error) {
     console.error('Error loading debt:', error)
   }
