@@ -67,46 +67,119 @@
         </div>
 
         <!-- Who owes whom -->
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <!-- Debtor -->
-          <div>
-            <label for="debtor" class="block text-sm font-medium text-gray-700">
-              Debtor (who owes money) *
-            </label>
-            <div class="mt-1">
-              <input
-                id="debtor"
-                v-model="form.debtor"
-                type="text"
-                required
-                placeholder="Name of person who owes"
-                class="input-field"
-                :class="{ 'border-red-300': errors.debtor }"
-              />
-              <p v-if="errors.debtor" class="mt-1 text-sm text-red-600">
-                {{ errors.debtor }}
-              </p>
+        <div class="space-y-4">
+          <!-- IOU Type Toggle -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center">
+                <input
+                  v-model="iouType"
+                  type="radio"
+                  value="lending"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span class="ml-2 text-sm font-medium text-gray-700">I'm lending money</span>
+              </label>
+              <label class="flex items-center">
+                <input
+                  v-model="iouType"
+                  type="radio"
+                  value="borrowing"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span class="ml-2 text-sm font-medium text-gray-700">I'm borrowing money</span>
+              </label>
             </div>
           </div>
 
-          <!-- Creditor -->
-          <div>
-            <label for="creditor" class="block text-sm font-medium text-gray-700">
-              Creditor (who is owed money) *
-            </label>
-            <div class="mt-1">
-              <input
-                id="creditor"
-                v-model="form.creditor"
-                type="text"
-                required
-                placeholder="Name of person who is owed"
-                class="input-field"
-                :class="{ 'border-red-300': errors.creditor }"
-              />
-              <p v-if="errors.creditor" class="mt-1 text-sm text-red-600">
-                {{ errors.creditor }}
-              </p>
+          <!-- Dynamic form based on IOU type -->
+          <div v-if="iouType === 'lending'" class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <!-- Debtor (who owes money) -->
+            <div>
+              <label for="debtor" class="block text-sm font-medium text-gray-700">
+                Who owes me money? *
+              </label>
+              <div class="mt-1">
+                <input
+                  id="debtor"
+                  v-model="form.debtor"
+                  type="text"
+                  required
+                  placeholder="Name of person who owes you"
+                  class="input-field"
+                  :class="{ 'border-red-300': errors.debtor }"
+                />
+                <p v-if="errors.debtor" class="mt-1 text-sm text-red-600">
+                  {{ errors.debtor }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Creditor (you) - auto-filled -->
+            <div>
+              <label for="creditor" class="block text-sm font-medium text-gray-700">
+                Who is owed money? *
+              </label>
+              <div class="mt-1">
+                <input
+                  id="creditor"
+                  v-model="form.creditor"
+                  type="text"
+                  required
+                  readonly
+                  class="input-field bg-gray-100 cursor-not-allowed"
+                  :class="{ 'border-red-300': errors.creditor }"
+                />
+                <p class="mt-1 text-xs text-gray-500">This is you (auto-filled)</p>
+                <p v-if="errors.creditor" class="mt-1 text-sm text-red-600">
+                  {{ errors.creditor }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="iouType === 'borrowing'" class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <!-- Debtor (you) - auto-filled -->
+            <div>
+              <label for="debtor" class="block text-sm font-medium text-gray-700">
+                Who owes money? *
+              </label>
+              <div class="mt-1">
+                <input
+                  id="debtor"
+                  v-model="form.debtor"
+                  type="text"
+                  required
+                  readonly
+                  class="input-field bg-gray-100 cursor-not-allowed"
+                  :class="{ 'border-red-300': errors.debtor }"
+                />
+                <p class="mt-1 text-xs text-gray-500">This is you (auto-filled)</p>
+                <p v-if="errors.debtor" class="mt-1 text-sm text-red-600">
+                  {{ errors.debtor }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Creditor (who you owe) -->
+            <div>
+              <label for="creditor" class="block text-sm font-medium text-gray-700">
+                Who are you paying back? *
+              </label>
+              <div class="mt-1">
+                <input
+                  id="creditor"
+                  v-model="form.creditor"
+                  type="text"
+                  required
+                  placeholder="Name of person you owe"
+                  class="input-field"
+                  :class="{ 'border-red-300': errors.creditor }"
+                />
+                <p v-if="errors.creditor" class="mt-1 text-sm text-red-600">
+                  {{ errors.creditor }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -137,12 +210,20 @@
             <InformationCircleIcon class="h-5 w-5 text-blue-400 mt-0.5" />
             <div class="ml-3">
               <h3 class="text-sm font-medium text-blue-800">
-                Quick tip
+                How IOUs work
               </h3>
               <div class="mt-2 text-sm text-blue-700">
-                <p>
-                  Make sure to fill in the correct names for debtor and creditor. 
-                  This helps keep track of who owes money to whom.
+                <p v-if="iouType === 'lending'">
+                  <strong>Lending money:</strong> You're the creditor (being owed money). 
+                  The debtor is the person who owes you money and will pay you back.
+                </p>
+                <p v-else>
+                  <strong>Borrowing money:</strong> You're the debtor (owing money). 
+                  The creditor is the person you owe money to and will pay back.
+                </p>
+                <p class="mt-2">
+                  Choose the scenario above and fill in the details. The form will automatically 
+                  fill in your name in the appropriate field.
                 </p>
               </div>
             </div>
@@ -180,11 +261,12 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { InformationCircleIcon } from '@heroicons/vue/24/outline'
 import { useIOUStore } from '@/stores/ious'
 import type { IOUCreate } from '@/types/api'
+import { useAuthStore } from '@/stores/auth'
 
 interface Props {
   id?: string
@@ -195,6 +277,7 @@ const props = defineProps<Props>()
 const router = useRouter()
 const route = useRoute()
 const iouStore = useIOUStore()
+const authStore = useAuthStore()
 
 const isEdit = computed(() => !!props.id || !!route.params.id)
 const iouId = computed(() => props.id || route.params.id as string)
@@ -210,6 +293,24 @@ const form = reactive<IOUCreate>({
 const errors = ref<Record<string, string>>({})
 const error = ref<string | null>(null)
 const isLoading = ref(false)
+
+const iouType = ref<'lending' | 'borrowing'>('lending')
+
+// Watch for changes in IOU type to auto-populate fields
+const updateFormFields = () => {
+  if (iouType.value === 'lending') {
+    // User is lending money (they are the creditor)
+    form.creditor = authStore.username || ''
+    form.debtor = '' // Clear debtor field for user input
+  } else {
+    // User is borrowing money (they are the debtor)
+    form.debtor = authStore.username || ''
+    form.creditor = '' // Clear creditor field for user input
+  }
+}
+
+// Watch for IOU type changes
+watch(iouType, updateFormFields)
 
 const validateForm = (): boolean => {
   errors.value = {}
@@ -296,6 +397,9 @@ onMounted(() => {
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
     form.due_date = tomorrow.toISOString().split('T')[0]
+    
+    // Initialize form fields based on IOU type
+    updateFormFields()
   } else {
     loadIOUForEdit()
   }

@@ -114,7 +114,14 @@
                 <div class="mt-2 flex items-center text-sm text-gray-500">
                   <div class="flex items-center">
                     <UserIcon class="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                    <span>{{ iou.is_owed_to_me ? iou.debtor : iou.creditor }}</span>
+                    <span>
+                      <span v-if="iou.is_owed_to_me">
+                        <span class="font-medium text-gray-700">{{ iou.debtor }}</span> owes me
+                      </span>
+                      <span v-else>
+                        I owe <span class="font-medium text-gray-700">{{ iou.creditor }}</span>
+                      </span>
+                    </span>
                   </div>
                   <div class="ml-6 flex items-center">
                     <CalendarIcon class="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
