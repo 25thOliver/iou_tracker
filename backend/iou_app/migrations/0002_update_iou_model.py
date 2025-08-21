@@ -6,16 +6,33 @@ import uuid
 
 
 def migrate_lender_to_created_by(apps, schema_editor):
-    """Migrate existing lender field to created_by field"""
+    """Migrate existing lender field to created_by and populate creditor."""
     IOU = apps.get_model('iou_app', 'IOU')
     User = apps.get_model('auth', 'User')
-    
-    # Get the first user as default (you can adjust this logic)
+
     default_user = User.objects.first()
-    
-    if default_user:
-        # Update all existing IOUs to have created_by set to default user
-        IOU.objects.filter(created_by__isnull=True).update(created_by=default_user)
+
+    for iou in IOU.objects.all():
+        # If the historical model still has lender, use it
+        lender_user = getattr(iou, 'lender', None)
+
+        # Set created_by from lender if missing
+        if getattr(iou, 'created_by_id', None) is None:
+            if lender_user is not None:
+                iou.created_by_id = lender_user.id
+            elif default_user is not None:
+                iou.created_by_id = default_user.id
+
+        # Set creditor to lender username if missing
+        if not getattr(iou, 'creditor', None):
+            if lender_user is not None:
+                iou.creditor = lender_user.username
+            elif default_user is not None:
+                iou.creditor = default_user.username
+            else:
+                iou.creditor = 'Unknown'
+
+        iou.save(update_fields=['created_by', 'creditor'])
 
 
 def reverse_migrate_lender_to_created_by(apps, schema_editor):
