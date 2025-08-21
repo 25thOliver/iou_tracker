@@ -41,7 +41,6 @@ class NotificationLogListView(generics.ListAPIView):
         ).order_by('-created_at')
 
 class NotificationListCreateView(generics.ListCreateAPIView):
-    queryset = NotificationLog.objects.all()
     serializer_class = NotificationLogSerializer
     permission_classes = [IsAuthenticated]
 
@@ -54,7 +53,6 @@ class NotificationListCreateView(generics.ListCreateAPIView):
         serializer.save(user=self.request.user)
 
 class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = NotificationLog.objects.all()
     serializer_class = NotificationLogSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'id' # Use 'id' as the lookup field
@@ -66,10 +64,7 @@ class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         # Special handling for marking as read
         if 'read' in self.request.data and self.request.data['read'] is True:
-            instance = serializer.save(status='read') # Assuming 'read' is a valid status
-            # You might want to update a 'read_at' timestamp here too
-            # instance.read_at = timezone.now()
-            # instance.save()
+            serializer.save(status='read')
         else:
             serializer.save()
 

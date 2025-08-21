@@ -83,17 +83,18 @@ class DebtListCreateView(generics.ListCreateAPIView):
         except Exception as e:
             logger.error(f"Failed to queue debt created notification: {str(e)}")
 
-        # Create notification log for creditor
+        # Create notification log for creditor (in-app/email log)
         try:
             from notifications.models import NotificationLog
             NotificationLog.objects.create(
                 user=self.request.user,
+                debt=debt,
                 notification_type='debt_created',
-                channel='app',
+                channel='email',  # channel choices are 'email' or 'sms'
+                recipient=self.request.user.email or (self.request.user.username or ''),
                 status='sent',
                 subject=f"New Debt Created: {debt.amount} for {debt.debtor_name}",
-                message_body=f"You created a new debt for {debt.debtor_name} ({debt.debtor_email}) of {debt.amount} ({debt.description})",
-                related_object_id=str(debt.id)
+                message_body=f"You created a new debt for {debt.debtor_name} ({debt.debtor_email or 'N/A'}) of {debt.amount} ({debt.description})",
             )
             # Also create notification log for debtor if they exist as a user
             from django.contrib.auth import get_user_model
@@ -103,12 +104,13 @@ class DebtListCreateView(generics.ListCreateAPIView):
                 if debtor_user:
                     NotificationLog.objects.create(
                         user=debtor_user,
+                        debt=debt,
                         notification_type='debt_created',
-                        channel='app',
+                        channel='email',
+                        recipient=debtor_user.email or (debtor_user.username or ''),
                         status='sent',
                         subject=f"New Debt Assigned: {debt.amount} from {self.request.user.get_full_name() or self.request.user.username}",
                         message_body=f"A new debt of {debt.amount} ({debt.description}) was assigned to you by {self.request.user.get_full_name() or self.request.user.username}.",
-                        related_object_id=str(debt.id)
                     )
             except Exception as e:
                 logger.error(f"Failed to create notification log for debtor: {str(e)}")

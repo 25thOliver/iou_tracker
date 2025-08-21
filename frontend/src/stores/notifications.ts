@@ -29,7 +29,8 @@ export const useNotificationStore = defineStore('notifications', () => {
     
     try {
       const data = await notificationApi.getAll()
-      notifications.value = data
+      // API is paginated; results contain the array
+      notifications.value = (data as any).results ?? (data as unknown as Notification[])
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Failed to fetch notifications'
       throw err

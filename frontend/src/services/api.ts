@@ -10,6 +10,7 @@ import type {
   DebtCreate,
   Notification,
   ApiError,
+  PaginatedResponse,
 } from "@/types/api";
 
 const API_BASE_URL =
@@ -156,13 +157,14 @@ export const debtApi = {
 
 // Notifications API
 export const notificationApi = {
-  getAll: async (): Promise<Notification[]> => {
-    const response: AxiosResponse<Notification[]> =
-      await api.get("/notifications/");
+  getAll: async (): Promise<PaginatedResponse<Notification[]>> => {
+    const response: AxiosResponse<PaginatedResponse<Notification[]>> = await api.get(
+      "/notifications/",
+    );
     return response.data;
   },
 
-  markAsRead: async (id: string): Promise<Notification> => {
+  markAsRead: async (id: number): Promise<Notification> => {
     const response: AxiosResponse<Notification> = await api.patch(
       `/notifications/${id}/`,
       { read: true },

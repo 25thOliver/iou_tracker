@@ -24,15 +24,23 @@ class NotificationPreferenceSerializer(serializers.ModelSerializer):
 class NotificationLogSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
     debt_description = serializers.CharField(source='debt.description', read_only=True)
-    
+    # Frontend-friendly fields
+    title = serializers.CharField(source='subject', read_only=True)
+    message = serializers.CharField(source='message_body', read_only=True)
+    read = serializers.SerializerMethodField()
+
     class Meta:
         model = NotificationLog
         fields = [
             'id', 'user', 'notification_type', 'channel', 'recipient',
-            'subject', 'status', 'sent_at', 'delivered_at', 'created_at',
+            'subject', 'title', 'message', 'status', 'read',
+            'sent_at', 'delivered_at', 'created_at',
             'debt_description', 'error_message'
         ]
         read_only_fields = ['id', 'created_at', 'sent_at', 'delivered_at']
+
+    def get_read(self, obj):
+        return obj.status in ('read', 'delivered', 'clicked')
 
 class NotificationTemplateSerializer(serializers.ModelSerializer):
     class Meta:

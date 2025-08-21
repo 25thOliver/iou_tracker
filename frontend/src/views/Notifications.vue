@@ -149,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import {
   BellIcon,
   CurrencyDollarIcon,
@@ -292,11 +292,49 @@ const loadMoreNotifications = async () => {
   }
 }
 
+let intervalId: number | undefined
+
+const startBackgroundRefresh = () => {
+  // Poll every 30s without blocking UI
+  intervalId = window.setInterval(() => {
+    notificationStore.fetchNotifications().catch((e) => {
+      console.error('Background refresh failed:', e)
+    })
+  }, 30000)
+
+  // Refresh when window regains focus
+  window.addEventListener('focus', onWindowFocus)
+}
+
+const stopBackgroundRefresh = () => {
+  if (intervalId) {
+    clearInterval(intervalId)
+    intervalId = undefined
+  }
+  window.removeEventListener('focus', onWindowFocus)
+}
+
+function onWindowFocus() {
+  notificationStore.fetchNotifications().catch(() => {})
+}
+
 onMounted(async () => {
   try {
-    await notificationStore.fetchNotifications()
+    if (notificationStore.notifications.length === 0) {
+      await notificationStore.fetchNotifications()
+    } else {
+      // Soft refresh in background without blocking UI
+      notificationStore.fetchNotifications().catch((e) => {
+        console.error('Background refresh failed:', e)
+      })
+    }
+    startBackgroundRefresh()
   } catch (error) {
     console.error('Error loading notifications:', error)
   }
+})
+
+onUnmounted(() => {
+  stopBackgroundRefresh()
 })
 </script>

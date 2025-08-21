@@ -76,7 +76,7 @@ export interface DebtCreate {
 }
 
 export interface Notification {
-  id: string;
+  id: number;
   title: string;
   message: string;
   read: boolean;
@@ -87,7 +87,7 @@ export interface Notification {
     | "debt_created"
     | "debt_updated"
     | "payment_reminder";
-  related_object_id?: string; // This was also number, assuming it refers to UUID
+  related_object_id?: string;
 }
 
 export interface ApiError {
